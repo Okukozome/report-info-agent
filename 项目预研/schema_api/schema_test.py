@@ -6,7 +6,7 @@ from typing import List, Optional
 from dotenv import load_dotenv
 
 # --- 1. 加载环境变量 ---
-load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), '..', '.env'))
+load_dotenv()
 
 # --- 2. 定义Pydantic数据结构 (Schema) ---
 # 这是我们希望LLM返回的结构
