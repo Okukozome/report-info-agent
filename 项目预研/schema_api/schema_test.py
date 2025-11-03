@@ -123,17 +123,17 @@ def extract_info_from_text(text_content: str) -> Optional[ExtractionResult]:
 
 # --- 4. 主执行逻辑：新增内容准确性校验 ---
 
-def compare_results(extracted: ExtractionResult, golden: ExtractionResult) -> bool:
+def compare_results(extracted: ExtractionResult, answer: ExtractionResult) -> bool:
     """
-    比较提取结果和黄金标准结果的内容是否完全一致（包括顺序）。
+    比较提取结果和答案标准结果的内容是否完全一致（包括顺序）。
     """
-    if len(extracted.persons) != len(golden.persons):
-        print(f"❌ 数量不匹配：模型提取 {len(extracted.persons)} 人，黄金标准 {len(golden.persons)} 人。")
+    if len(extracted.persons) != len(answer.persons):
+        print(f"❌ 数量不匹配：模型提取 {len(extracted.persons)} 人，答案标准 {len(answer.persons)} 人。")
         return False
     
     # 逐个比对姓名和职务
     mismatches = []
-    for i, (ext_p, gol_p) in enumerate(zip(extracted.persons, golden.persons)):
+    for i, (ext_p, gol_p) in enumerate(zip(extracted.persons, answer.persons)):
         is_match = (ext_p.name == gol_p.name) and (ext_p.role == gol_p.role)
         if not is_match:
             mismatches.append({
@@ -161,15 +161,15 @@ def main():
     # 构造文件路径
     script_dir = os.path.dirname(__file__)
     sample_file_path = os.path.join(script_dir, 'sample.txt')
-    golden_file_path = os.path.join(script_dir, 'sample_golden.json') # 新增的黄金标准文件
+    answer_file_path = os.path.join(script_dir, 'sample_answer.json') # 新增的答案标准文件
     
-    # 1. 检查输入文本和黄金标准文件
+    # 1. 检查输入文本和答案标准文件
     if not os.path.exists(sample_file_path):
         print(f"错误：未找到输入文本文件: {sample_file_path}")
         return
         
-    if not os.path.exists(golden_file_path):
-        print(f"错误：未找到黄金标准文件。请手动创建: {golden_file_path}")
+    if not os.path.exists(answer_file_path):
+        print(f"错误：未找到答案标准文件。请手动创建: {answer_file_path}")
         return
 
     try:
@@ -178,9 +178,9 @@ def main():
             content = f.read()
         print(f"已加载输入文本内容，共 {len(content)} 字符。")
 
-        # 读取黄金标准
-        golden_data = ExtractionResult.model_validate_json(open(golden_file_path, 'r', encoding='utf-8').read())
-        print(f"已加载黄金标准，共 {len(golden_data.persons)} 人。")
+        # 读取答案标准
+        answer_data = ExtractionResult.model_validate_json(open(answer_file_path, 'r', encoding='utf-8').read())
+        print(f"已加载答案标准，共 {len(answer_data.persons)} 人。")
         
         # 2. 执行提取
         extraction_data = extract_info_from_text(content)
@@ -199,7 +199,7 @@ def main():
 
             # 4. 准确性校验 (新增核心逻辑)
             print("\n--- 准确性校验 ---")
-            is_accurate = compare_results(extraction_data, golden_data)
+            is_accurate = compare_results(extraction_data, answer_data)
             
             if is_accurate:
                 print("\n--- MVP 验收标准：格式正确 AND 内容准确达成！ ---")
