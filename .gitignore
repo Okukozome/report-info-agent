@@ -1,5 +1,6 @@
 # --- 自定义 ---
 .fail_test
+.recycle_bin
 
 # --- 通用排除项 ---
 .env
