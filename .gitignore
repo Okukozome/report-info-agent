@@ -1,6 +1,10 @@
 # --- 自定义 ---
 .fail_test
 .recycle_bin
+preprocessing/raw/*
+
+# --- 保留项 ---
+!preprocessing/raw/filelist.txt
 
 # --- 通用排除项 ---
 .env
