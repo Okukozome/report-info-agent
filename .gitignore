@@ -2,6 +2,8 @@
 .fail_test
 .recycle_bin
 *.pdf
+*.xlsx
+*.csv
 
 # --- 保留项 ---
 !preprocessing/raw/filelist.txt
