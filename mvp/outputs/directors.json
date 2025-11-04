@@ -1,0 +1,84 @@
+{
+  "category": "Directors",
+  "persons": [
+    {
+      "rank": 1,
+      "name": "谭旭光",
+      "role": "董事长"
+    },
+    {
+      "rank": 2,
+      "name": "王曰普",
+      "role": "董事"
+    },
+    {
+      "rank": 3,
+      "name": "江奎",
+      "role": "董事"
+    },
+    {
+      "rank": 4,
+      "name": "张泉",
+      "role": "董事"
+    },
+    {
+      "rank": 5,
+      "name": "徐新玉",
+      "role": "董事"
+    },
+    {
+      "rank": 6,
+      "name": "孙少军",
+      "role": "董事"
+    },
+    {
+      "rank": 7,
+      "name": "袁宏明",
+      "role": "董事"
+    },
+    {
+      "rank": 8,
+      "name": "严鉴铂",
+      "role": "董事"
+    },
+    {
+      "rank": 9,
+      "name": "Gordon Riske",
+      "role": "董事"
+    },
+    {
+      "rank": 10,
+      "name": "Michael Macht",
+      "role": "董事"
+    },
+    {
+      "rank": 11,
+      "name": "张忠",
+      "role": "独立董事"
+    },
+    {
+      "rank": 12,
+      "name": "王贡勇",
+      "role": "独立董事"
+    },
+    {
+      "rank": 13,
+      "name": "宁向东",
+      "role": "独立董事"
+    },
+    {
+      "rank": 14,
+      "name": "李洪武",
+      "role": "独立董事"
+    },
+    {
+      "rank": 15,
+      "name": "闻道才",
+      "role": "独立董事"
+    }
+  ],
+  "assessment": {
+    "confidence_level": "High",
+    "doubts": []
+  }
+}

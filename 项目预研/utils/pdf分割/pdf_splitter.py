@@ -50,16 +50,16 @@ def main():
     OUTPUT_DIR = "output"
     
     # 示例文件名
-    INPUT_FILENAME = "sample.pdf"
-    OUTPUT_FILENAME = "sample_page_split.pdf"  # 根据需要修改输出文件名
+    INPUT_FILENAME = "董事2.pdf"
+    OUTPUT_FILENAME = "董事2split.pdf"  # 根据需要修改输出文件名
 
     # 完整路径
     input_pdf_path = os.path.join(INPUT_DIR, INPUT_FILENAME)
     output_pdf_path = os.path.join(OUTPUT_DIR, OUTPUT_FILENAME)
 
     # 分割页码范围（基于 1 起始）
-    START_PAGE = 42
-    END_PAGE = 48
+    START_PAGE = 58
+    END_PAGE = 65
 
     # 示例：创建目录和空文件以便测试 (可选，手动创建也行)
     os.makedirs(INPUT_DIR, exist_ok=True)

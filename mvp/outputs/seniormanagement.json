@@ -1,0 +1,66 @@
+{
+  "category": "SeniorManagement",
+  "persons": [
+    {
+      "rank": 1,
+      "name": "邝馄堂",
+      "role": "财务总监兼 公司秘书"
+    },
+    {
+      "rank": 2,
+      "name": "郝庆贵",
+      "role": "董事会秘书"
+    },
+    {
+      "rank": 3,
+      "name": "冯刚",
+      "role": "副总裁"
+    },
+    {
+      "rank": 4,
+      "name": "佟德辉",
+      "role": "副总裁"
+    },
+    {
+      "rank": 5,
+      "name": "李绍华",
+      "role": "副总裁"
+    },
+    {
+      "rank": 6,
+      "name": "任冰冰",
+      "role": "副总裁"
+    },
+    {
+      "rank": 7,
+      "name": "丁迎东",
+      "role": "副总裁"
+    },
+    {
+      "rank": 8,
+      "name": "胡浩然",
+      "role": "副总裁"
+    },
+    {
+      "rank": 9,
+      "name": "张纪元",
+      "role": "副总裁"
+    },
+    {
+      "rank": 10,
+      "name": "刘元强",
+      "role": "副总裁"
+    },
+    {
+      "rank": 11,
+      "name": "曹志月",
+      "role": "副总裁"
+    }
+  ],
+  "assessment": {
+    "confidence_level": "High",
+    "doubts": [
+      "邝馄堂的角色描述为财务总监兼公司秘书，但未明确为董事会秘书，属于高管类别"
+    ]
+  }
+}
