@@ -1,7 +1,7 @@
 # --- 自定义 ---
 .fail_test
 .recycle_bin
-preprocessing/raw/*
+*.pdf
 
 # --- 保留项 ---
 !preprocessing/raw/filelist.txt
