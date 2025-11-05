@@ -16,7 +16,7 @@ logger = logging.getLogger("Orchestrator")
 TOC_REGEX = re.compile(r"目\s*录")
 
 # 步骤 6.1：定义最大重试次数
-VERIFICATION_MAX_RETRIES = 3
+VERIFICATION_MAX_RETRIES = 5
 
 def process_file(
     pdf_path: Path, 
