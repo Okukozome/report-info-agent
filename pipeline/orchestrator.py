@@ -89,10 +89,7 @@ def _run_verification(
     
     if not verification_result:
         logger.error("  [Verifier] LLM 核对失败，返回 None。")
-        return set(), schemas.ConfidenceAssessment(
-            confidence_level="Low", 
-            doubts=["LLM 核对调用失败。"]
-        )
+        raise Exception("LLM Verifier failed (returned None), likely due to API error or timeout.")
         
     found_names_set = set(verification_result.found_names)
     logger.info(f"  [Verifier] 核对完成。在原文中找到 {len(found_names_set)} / {len(combined_target_names)} 个姓名。")
