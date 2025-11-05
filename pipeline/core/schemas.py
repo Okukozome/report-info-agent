@@ -4,9 +4,15 @@ from typing import List, Literal, Optional
 
 class Person(BaseModel):
     """代表一位被提取的人员及其排序"""
-    rank: int = Field(..., description="基于在原文中出现的先后顺序生成的排名（从1开始）")
+    rank: int = Field(
+        ..., 
+        description="基于在原文中出现的先后顺序生成的排名（从1开始）。如果某姓名的职务按例外规则不参与排名，则rank应设为'0'。如果某姓名在原文中没有出现，则将rank设为'-1'。"
+    )
     name: str = Field(..., description="人员的姓名（必须来自标准名单）。注意：不可能同名异人，如果存在同名多个职务，则属于兼任情况。")
-    role: str = Field(..., description="在原文中找到的该人员的完整职务，多职兼任时用顿号隔开")
+    role: str = Field(
+        ..., 
+        description="在原文中找到的该人员的完整职务。如果rank为-1（未找到），则此字段应为'N/A'。多职务兼任时用顿号隔开"
+    )
 
 class ConfidenceAssessment(BaseModel):
     """模型对本次提取任务的自我评估"""

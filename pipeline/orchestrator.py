@@ -19,7 +19,7 @@ def _run_ranking(
 ) -> Tuple[Dict[str, schemas.CategoryExtractionResult], int]:
     
     results: Dict[str, schemas.CategoryExtractionResult] = {}
-    total_found_count = 0
+    total_found_count = 0  # 统计所有 rank >= 0 的人
     
     if not source_text.strip():
          logger.warning("  [Ranker] 排序的原文内容为空，跳过所有排序。")
@@ -27,6 +27,7 @@ def _run_ranking(
     
     for category in ["Directors", "Supervisors", "SeniorManagement"]:
         target_names = target_lists.get(category, [])
+        target_names_set = set(target_names)
         
         if not target_names:
             logger.info(f"  [{category}] 标准名单为空，跳过。")
@@ -42,22 +43,37 @@ def _run_ranking(
         
         if result:
             results[category] = result
-            found_count = len(result.persons)
+            
+            # 统计所有被找到的人 (rank >= 0, 包括 1...N 和 0)
+            found_persons = [p for p in result.persons if p.rank >= 0]
+            found_count = len(found_persons)
             total_found_count += found_count
             
-            # 检查是否有未找到的人员 (这是排序后的健全性检查)
-            if found_count < len(target_names):
+            # 检查未找到的人 (rank == -1)
+            not_found_persons = [p for p in result.persons if p.rank == -1]
+            not_found_count = len(not_found_persons)
+
+            # 健全性检查：是否有未找到的人员 (rank: -1)
+            if not_found_count > 0:
                 logger.warning(f"  [{category}] 排序后名单不全: 找到 {found_count} / {len(target_names)} 人。")
-                found_names = {p.name for p in result.persons}
-                missing_names = set(target_names) - found_names
-                logger.warning(f"  [{category}] 排序后未找到: {missing_names}")
+                missing_names_from_result = {p.name for p in not_found_persons}
+                logger.warning(f"  [{category}] 模型报告未找到 (rank: -1): {missing_names_from_result}")
                 
-                # 在评估中补充疑虑
-                doubt_exists = any(f"名单中 {len(missing_names)} 人未在原文中找到" in d for d in result.assessment.doubts)
+                # 在评估中补充疑虑，并降低置信度
+                doubt_msg = f"名单中 {not_found_count} 人未在原文中找到"
+                # 避免重复添加
+                doubt_exists = any(doubt_msg in d for d in result.assessment.doubts)
                 if not doubt_exists:
-                     result.assessment.doubts.append(f"名单中 {len(missing_names)} 人未在原文中找到: {missing_names}")
+                     result.assessment.doubts.append(f"{doubt_msg}: {missing_names_from_result}")
                 if result.assessment.confidence_level == "High":
                     result.assessment.confidence_level = "Medium"
+            
+            # 兜底检查：返回的总人数是否与目标名单人数一致
+            if len(result.persons) != len(target_names_set):
+                logger.error(f"  [{category}] 严重逻辑错误：模型返回的人数 ({len(result.persons)}) 与标准名单人数 ({len(target_names_set)}) 不匹配！")
+                result.assessment.doubts.append(f"严重错误：返回总人数 {len(result.persons)} != 名单人数 {len(target_names_set)}")
+                result.assessment.confidence_level = "Low"
+                
         else:
             logger.error(f"  [{category}] LLM 排序失败，返回 None。")
             
@@ -252,7 +268,7 @@ def process_task(task_id: str, pdf_path: Path) -> Literal["success", "failed", "
              task_logger.warning(f"[Verifier] 核对阶段发现疑虑，标记审查: {verification_doubts}")
 
         for category, result in final_results.items():
-            # 2. 检查排序阶段的疑虑
+            # 2. 检查排序阶段的疑虑 (rank: -1 会自动导致 Medium/Low 和 doubt)
             if result.assessment.confidence_level != "High" or result.assessment.doubts:
                 needs_review = True
                 task_logger.warning(f"[{category}] 排序阶段需要审查 (置信度: {result.assessment.confidence_level}, 疑虑: {result.assessment.doubts})")
@@ -263,10 +279,12 @@ def process_task(task_id: str, pdf_path: Path) -> Literal["success", "failed", "
                 new_doubts = [f"[Verifier Doubt] {d}" for d in verification_doubts if f"[Verifier Doubt] {d}" not in result.assessment.doubts and d not in result.assessment.doubts]
                 result.assessment.doubts.extend(new_doubts)
 
-            # 保存最终结果
-            save_results_csv(task_id, category, result.persons)
+            # 保存最终结果 (只保存被找到且排名的人)
+            # 只保存 rank >= 0 的人到 CSV
+            ranked_persons_only = [p for p in result.persons if p.rank >= 0]
+            save_results_csv(task_id, category, ranked_persons_only)
             
-            # 保存 debug JSON
+            # 保存 debug JSON (保存完整结果，包括 rank: -1)
             debug_files[f'4_{category.lower()}_extraction.json'] = result.model_dump_json(indent=2, ensure_ascii=False)
         
         if needs_review:
@@ -276,7 +294,6 @@ def process_task(task_id: str, pdf_path: Path) -> Literal["success", "failed", "
         if (p1_found_count == total_target_count) and (final_found_count < total_target_count) and (status == "success"):
             status = "review"
             task_logger.warning(f"状态降级: P1 核对完整，但排序不完整 ({final_found_count}/{total_target_count})。")
-
         if status == "success":
              task_logger.info("任务状态: success (全部高置信度且完整)")
     

@@ -227,30 +227,43 @@ def verify_name_presence(
         logger.error(f"[Verifier] 发生异常: {e}")
         return None
 
-# --- 基于名单的排序 ---
+def _get_category_specific_rules(
+    category: Literal["Directors", "Supervisors", "SeniorManagement"]
+) -> str:
+    """返回类别特定的例外规则"""
+    rules = {
+        "Directors": "- 除了董事会秘书，含“董事”二字的都是董事\n- 董事会秘书不是董事，不参与排序，设 `rank: 0`",
+        "SeniorManagement": "- 允许董事兼任高管，但不默认董事都属于高管，以原文为主\n- 监事不可兼任高管",
+        "Supervisors": "- 含“监事”二字的都是监事"
+    }
+    return rules.get(category, "")
 
 def _get_ranking_system_prompt(
     category: Literal["Directors", "Supervisors", "SeniorManagement"],
     target_names: List[str]
-    ) -> str:
+) -> str:
     
-    names_list_str = "\n".join([f"- {name}" for name in target_names])
-    if not names_list_str:
-        names_list_str = "(无)"
+    names_list = "、".join(target_names) if target_names else "无"
+    category_rules = _get_category_specific_rules(category)
 
-    return (
-        "你是一个专业的年报分析助手。你的任务是严格按照用户提供的 **待排序名单**，在给定的文本中找到这些人员，并根据他们在文本中 **出现的先后顺序** 对他们进行排名 (rank)。\n\n"
-        f"**提取目标类别：** {category}\n"
-        f"**待排序名单 (Target List):**\n{names_list_str}\n\n"
-        "**核心规则：**\n"
-        "1. 你**必须**严格按照 【待排序名单】 进行匹配。你的输出 `persons` 列表里的人员，必须 100% 来自 【待排序名单】。\n"
-        "2. `rank` 字段必须基于该人员在下方提供的 【原文】 中出现的先后顺序。先出现的 `rank` 低（从1开始）。\n"
-        "3. **【原文】 中出现的、但不在 【待排序名单】 中的任何其他姓名，都必须被忽略。**\n"
-        "4. 如果 【待排序名单】 中的某个人在 【原文】 中**没有**被找到，则你的输出 `persons` 列表中不应包含此人。\n"
-        "5. **特别注意：** 仔细处理姓名中的空格或制表符，例如原文的 '张 三' 应该能匹配名单中的 '张三'。\n"
-        "6. `role` 字段必须填写原文中的完整职务。\n"
-        "7. 你必须调用 `save_extraction` 工具返回结果，并提供你的置信度评估。如果出现名单中有人未找到的情况，必须在 `doubts` 字段中明确说明。"
-    )
+    return f"""
+[!!!] 注意：你的任务是对{category}在**原文**中的出现顺序进行排序，**而不是依据名单中出现的先后顺序进行排序**。
+
+**处理规则：**
+排序依据：rank=1:原文中首个出现的名单内人员，rank=2:第二个出现的名单内人员，以此类推
+身份判据：
+{category_rules}
+- 离任人员应正常纳入排序
+如果名单中的某个姓名未找到：rank 设为 -1，role 设为 'N/A'
+
+输出要求：
+- 必须包含名单中所有人员，不多不少不重复，同名多身份为兼任情况。
+- role 字段填写原文中的完整职务
+- 如有 rank -1 的情况，在 doubts 中说明
+
+参考{category}名单（乱序）：
+{names_list}
+"""
 
 def rank_names_from_text(
     markdown_content: str, 
@@ -323,15 +336,50 @@ def rank_names_from_text(
             
             logger.info(f"  [LLM Ranker] Pydantic 格式验证通过 ({category})。")
             
-            # 最终校验：确保模型没有返回名单之外的人
-            validated_names = {p.name for p in validated_result.persons}
+            # --- 后处理和校验逻辑 ---
+            validated_names_set = {p.name for p in validated_result.persons}
             target_names_set = set(target_names)
-            invalid_names = validated_names - target_names_set
-            if invalid_names:
-                logger.warning(f"!!! [Ranker] 模型幻觉：返回了名单之外的姓名: {invalid_names}")
+            
+            # 1. 检查幻觉 (返回了名单之外的人)
+            hallucinated_names = validated_names_set - target_names_set
+            if hallucinated_names:
+                logger.warning(f"!!! [Ranker] 模型幻觉：返回了名单之外的姓名: {hallucinated_names}")
+                # 过滤掉幻觉姓名
                 validated_result.persons = [p for p in validated_result.persons if p.name in target_names_set]
-                validated_result.assessment.doubts.append(f"模型产生了幻觉，返回了名单外的姓名: {invalid_names}，已自动过滤。")
+                validated_result.assessment.doubts.append(f"模型产生了幻觉，返回了名单外的姓名: {hallucinated_names}，已自动过滤。")
                 validated_result.assessment.confidence_level = "Medium"
+                # 更新 validated_names_set
+                validated_names_set = {p.name for p in validated_result.persons}
+
+            # 2. 检查遗漏 (模型未按要求返回足额名单，这是兜底)
+            if len(validated_result.persons) != len(target_names_set):
+                logger.warning(f"!!! [Ranker] 模型未遵循指令：应返回 {len(target_names_set)} 人，实际返回 {len(validated_result.persons)} 人。")
+                missing_names_in_output = target_names_set - validated_names_set
+                if missing_names_in_output:
+                     logger.warning(f"!!! [Ranker] 模型彻底遗漏了: {missing_names_in_output}")
+                     # 选择在这里手动补全 rank = -1 的人，以增强鲁棒性
+                     for missing_name in missing_names_in_output:
+                         validated_result.persons.append(
+                             schemas.Person(rank=-1, name=missing_name, role="N/A")
+                         )
+                     validated_result.assessment.doubts.append(f"模型未返回足额名单，已自动补全 {len(missing_names_in_output)} 个 'rank: -1' 记录。")
+                     validated_result.assessment.confidence_level = "Medium"
+                else:
+                     # 这种情况理论上不该发生（人数不匹配但名字都对上了）
+                     validated_result.assessment.doubts.append(f"模型返回人数 ({len(validated_result.persons)}) 与目标 ({len(target_names_set)}) 不匹配，但姓名集合匹配。")
+                     validated_result.assessment.confidence_level = "Medium"
+
+
+            # 检查并记录 rank = -1 的人 (这是标准流程)
+            not_found_persons = [p.name for p in validated_result.persons if p.rank == -1]
+            if not_found_persons:
+                logger.info(f"  [LLM Ranker] 模型报告 {len(not_found_persons)} 人未找到 (rank: -1): {not_found_persons}")
+                # 检查 doubt 是否已包含此信息
+                doubt_msg = f"名单中 {len(not_found_persons)} 人在原文中未找到 (rank: -1)"
+                if not any(doubt_msg in d for d in validated_result.assessment.doubts):
+                    validated_result.assessment.doubts.append(f"{doubt_msg}: {not_found_persons}")
+                if validated_result.assessment.confidence_level == "High":
+                    validated_result.assessment.confidence_level = "Medium"
 
             return validated_result
         

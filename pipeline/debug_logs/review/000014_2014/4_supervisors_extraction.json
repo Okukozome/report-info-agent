@@ -1,0 +1,24 @@
+{
+  "category": "Supervisors",
+  "persons": [
+    {
+      "rank": 1,
+      "name": "杨建达",
+      "role": "监事会主席"
+    },
+    {
+      "rank": 2,
+      "name": "张仲文",
+      "role": "监事"
+    },
+    {
+      "rank": 3,
+      "name": "许志忠",
+      "role": "监事"
+    }
+  ],
+  "assessment": {
+    "confidence_level": "High",
+    "doubts": []
+  }
+}

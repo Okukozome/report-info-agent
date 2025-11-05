@@ -54,6 +54,8 @@
   ],
   "assessment": {
     "confidence_level": "High",
-    "doubts": []
+    "doubts": [
+      "王凡被列为'董事会秘书'，不算董事，rank设为0。"
+    ]
   }
 }
