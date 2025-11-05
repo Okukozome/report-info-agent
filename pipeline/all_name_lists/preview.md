@@ -16,7 +16,7 @@ stkcd,year,ID,name
 ...
 ```
 
-senior_management.csv
+seniormanagement.csv
 ```csv
 stkcd,year,ID,name
 1,1999-12-31,309374,张润深

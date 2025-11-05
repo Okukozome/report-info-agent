@@ -1,0 +1,39 @@
+{
+  "category": "SeniorManagement",
+  "persons": [
+    {
+      "rank": 1,
+      "name": "温毅",
+      "role": "董事、总经理"
+    },
+    {
+      "rank": 2,
+      "name": "熊跃华",
+      "role": "副总经理"
+    },
+    {
+      "rank": 3,
+      "name": "魏孔尧",
+      "role": "副总经理、财务总监"
+    },
+    {
+      "rank": 4,
+      "name": "赵忠",
+      "role": "副总经理"
+    },
+    {
+      "rank": 5,
+      "name": "徐美平",
+      "role": "副总经理"
+    },
+    {
+      "rank": 6,
+      "name": "王凡",
+      "role": "董事会秘书"
+    }
+  ],
+  "assessment": {
+    "confidence_level": "High",
+    "doubts": []
+  }
+}

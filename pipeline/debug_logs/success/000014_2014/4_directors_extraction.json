@@ -1,0 +1,59 @@
+{
+  "category": "Directors",
+  "persons": [
+    {
+      "rank": 1,
+      "name": "陈勇",
+      "role": "董事长"
+    },
+    {
+      "rank": 2,
+      "name": "温毅",
+      "role": "董事、总经理"
+    },
+    {
+      "rank": 3,
+      "name": "张选昭",
+      "role": "董事"
+    },
+    {
+      "rank": 4,
+      "name": "董方",
+      "role": "董事"
+    },
+    {
+      "rank": 5,
+      "name": "黄一格",
+      "role": "董事"
+    },
+    {
+      "rank": 6,
+      "name": "刘泰康",
+      "role": "董事"
+    },
+    {
+      "rank": 7,
+      "name": "庞大同",
+      "role": "独立董事"
+    },
+    {
+      "rank": 8,
+      "name": "张方亮",
+      "role": "独立董事"
+    },
+    {
+      "rank": 9,
+      "name": "范值清",
+      "role": "独立董事"
+    },
+    {
+      "rank": 10,
+      "name": "王凡",
+      "role": "董事会秘书"
+    }
+  ],
+  "assessment": {
+    "confidence_level": "High",
+    "doubts": []
+  }
+}
