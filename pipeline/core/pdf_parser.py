@@ -2,7 +2,7 @@
 import base64
 import requests
 import logging
-from core.settings import Settings # [修正]
+from core.settings import Settings
 
 logger = logging.getLogger(__name__)
 
@@ -27,7 +27,7 @@ def parse_pdf_to_markdown(file_path: str, settings: Settings) -> str:
         "Content-Type": "application/json"
     }
 
-    # 使用预研中验证过的推荐参数
+    # 使用推荐参数
     payload = {
         "file": file_data,
         "fileType": 0, # 0 表示PDF

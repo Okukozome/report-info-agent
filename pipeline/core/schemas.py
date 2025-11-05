@@ -84,7 +84,6 @@ class CoreBlocksExtractionResult(BaseModel):
         description="对本次核心块提取的置信度评估"
     )
 
-# --- [新增] 用于核对步骤的模型 ---
 class NameVerificationResult(BaseModel):
     """保存对标准名单的核验结果"""
     found_names: List[str] = Field(

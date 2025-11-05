@@ -3,7 +3,7 @@ import argparse
 import re
 import sys
 from pathlib import Path
-from typing import Dict  # <-- 添加此行
+from typing import Dict
 from orchestrator import process_task
 from utils.logging_config import setup_global_logger
 import logging

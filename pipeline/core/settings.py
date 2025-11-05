@@ -4,23 +4,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 from pydantic import Field
 from pathlib import Path
 
-# 定位到 .env 文件 (根目录, 即 pipeline/../.env)
-# __file__ -> settings.py
-# .parent -> core/
-# .parent -> pipeline/
-# .parent -> root/
-#
-# [修正] 确保 .env 路径正确
-# 当在 pipeline/ 中运行 python main.py 时，Path(__file__) 是绝对路径
-# .../report-info-agent/pipeline/core/settings.py
-# .parent.parent.parent 指向 .../report-info-agent/
-# 这个逻辑是正确的。
-#
-# 唯一需要担心的是 .env 文件在 pipeline 目录。
-# 但用户说 .env 在根目录，所以这个路径是正确的。
-#
-# [修正] 另一种更健壮的查找方式，使其在 pipeline/ 运行或在 root/ 运行 -m都能工作
-# 我们坚持 pipeline/ 目录运行
+# 定位到 .env 文件 (项目根目录)
 BASE_DIR = Path(__file__).parent.parent # pipeline/ 目录
 ENV_PATH = BASE_DIR.parent / '.env' # 根目录 / .env
 

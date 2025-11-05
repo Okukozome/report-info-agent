@@ -3,7 +3,7 @@ import pandas as pd
 from pathlib import Path
 from typing import Dict, Literal, List
 import logging
-from core.schemas import Person # [修正]
+from core.schemas import Person
 
 BASE_DIR = Path(__file__).parent.parent # pipeline/ 目录
 RESULTS_DIR = BASE_DIR / "results"

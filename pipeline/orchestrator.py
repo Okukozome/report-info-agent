@@ -51,8 +51,8 @@ def _run_ranking(
                 found_names = {p.name for p in result.persons}
                 missing_names = set(target_names) - found_names
                 logger.warning(f"  [{category}] 排序后未找到: {missing_names}")
+                
                 # 在评估中补充疑虑
-                # 检查是否已存在类似的疑虑
                 doubt_exists = any(f"名单中 {len(missing_names)} 人未在原文中找到" in d for d in result.assessment.doubts)
                 if not doubt_exists:
                      result.assessment.doubts.append(f"名单中 {len(missing_names)} 人未在原文中找到: {missing_names}")
@@ -100,7 +100,7 @@ def _run_verification(
     # 将核对的疑虑点也返回
     return found_names_set, verification_result.assessment
 
-# 主流程 [重构]
+# 主流程
 def process_task(task_id: str, pdf_path: Path) -> Literal["success", "failed", "review"]:
     """
     执行单个任务的完整流水线
@@ -158,14 +158,14 @@ def process_task(task_id: str, pdf_path: Path) -> Literal["success", "failed", "
         if not md_content.strip():
             raise Exception("PDF 解析结果为空，无法继续。")
 
-        # 步骤 1.5: 核心块提取
-        task_logger.info("步骤 1.5: 正在提取核心块 (表格/任职情况)...")
+        # 步骤 1+: 核心块提取
+        task_logger.info("步骤 1+: 正在提取核心块 (表格/任职情况)...")
         core_blocks = llm_extractor.extract_core_blocks(md_content, cfg)
         if not core_blocks:
             raise Exception("核心块提取失败 (LLM 返回 None)。")
         debug_files['2_core_blocks.json'] = core_blocks.model_dump_json(indent=2, ensure_ascii=False)
 
-        # 步骤 2 & 3: [重构] 核对、回退与决策
+        # 步骤 2 & 3: 核对、回退与决策
         task_logger.info("步骤 2/3: 开始核对 P1 (表格)...")
         
         p1_source_text = ""
@@ -228,7 +228,7 @@ def process_task(task_id: str, pdf_path: Path) -> Literal["success", "failed", "
         if not final_source_text.strip():
              raise Exception(f"P1 和 P2 均未找到可用文本或未找到任何姓名。来源: {source_type}")
 
-        # 步骤 4: [修改] 执行排序
+        # 步骤 4: 执行排序
         task_logger.info(f"步骤 4: 最终结果来源: {source_type}。开始执行排序...")
         final_results, final_found_count = _run_ranking(
             final_source_text, 
@@ -246,7 +246,7 @@ def process_task(task_id: str, pdf_path: Path) -> Literal["success", "failed", "
             if total_target_count > 0:
                 status = "failed" # 有名单，但没结果
 
-        # 检查是否需要人工审查 (Req #2)
+        # 检查是否需要人工审查
         needs_review = False
         
         # 1. 检查核对阶段的疑虑
@@ -266,10 +266,10 @@ def process_task(task_id: str, pdf_path: Path) -> Literal["success", "failed", "
                 new_doubts = [f"[Verifier Doubt] {d}" for d in verification_doubts if f"[Verifier Doubt] {d}" not in result.assessment.doubts and d not in result.assessment.doubts]
                 result.assessment.doubts.extend(new_doubts)
 
-            # 保存最终结果 (Req #2)
+            # 保存最终结果
             save_results_csv(task_id, category, result.persons)
             
-            # 保存 debug JSON (Req #2)
+            # 保存 debug JSON
             debug_files[f'4_{category.lower()}_extraction.json'] = result.model_dump_json(indent=2, ensure_ascii=False)
         
         if needs_review:

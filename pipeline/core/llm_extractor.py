@@ -2,8 +2,8 @@
 import requests
 import json
 import logging
-from core.settings import Settings # [修正]
-from core.schemas import ( # [修正]
+from core.settings import Settings
+from core.schemas import (
     CategoryExtractionResult, 
     CoreBlocksExtractionResult,
     NameVerificationResult, 
@@ -13,7 +13,7 @@ from typing import Literal, Optional, List
 
 logger = logging.getLogger(__name__)
 
-# --- 核心块提取 (与之前一致) ---
+# --- 核心块提取 ---
 def _get_core_block_system_prompt() -> str:
     """
     生成用于提取核心块（表格和文本）的系统提示词。
@@ -104,11 +104,11 @@ def extract_core_blocks(
         logger.error(f"发生异常: {e}")
         return None
 
-# --- [新增] 姓名核对 (Verification) ---
+# --- 姓名核对 (Verification) ---
 
 def _get_verification_system_prompt(target_names: List[str]) -> str:
     """
-    [新增] 生成用于核对姓名的系统提示词。
+    生成用于核对姓名的系统提示词。
     """
     names_list_str = "\n".join([f"- {name}" for name in target_names])
     if not names_list_str:
@@ -136,7 +136,7 @@ def verify_name_presence(
     settings: Settings
 ) -> Optional[NameVerificationResult]:
     """
-    [新增] 调用 LLM API，核对标准名单中的姓名是否在原文中存在。
+    调用 LLM API，核对标准名单中的姓名是否在原文中存在。
     """
     
     if not target_names:
@@ -227,13 +227,13 @@ def verify_name_presence(
         logger.error(f"[Verifier] 发生异常: {e}")
         return None
 
-# --- 基于名单的排序 (与之前一致) ---
+# --- 基于名单的排序 ---
 
 def _get_ranking_system_prompt(
     category: Literal["Directors", "Supervisors", "SeniorManagement"],
     target_names: List[str]
     ) -> str:
-    # ... (此函数代码不变) ...
+    
     names_list_str = "\n".join([f"- {name}" for name in target_names])
     if not names_list_str:
         names_list_str = "(无)"
@@ -258,7 +258,7 @@ def rank_names_from_text(
     target_names: List[str],
     settings: Settings
 ) -> Optional[CategoryExtractionResult]:
-    # ... (此函数代码不变) ...
+    
     if not target_names:
         logger.warning(f"  [LLM Ranker] 类别 {category} 的标准名单为空，跳过提取。")
         return CategoryExtractionResult(

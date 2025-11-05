@@ -18,7 +18,7 @@ CATEGORIES = {
 @lru_cache(maxsize=None)
 def _load_csv_to_dataframe(csv_path: Path) -> pd.DataFrame:
     """
-    [缓存] 从CSV加载数据并设置多级索引
+    从CSV加载数据并设置多级索引
     """
     logger.info(f"[DataLoader] 正在加载并缓存文件: {csv_path.name} ...")
     try:
@@ -34,7 +34,7 @@ def _load_csv_to_dataframe(csv_path: Path) -> pd.DataFrame:
         df.dropna(subset=['stkcd', 'year', 'name'], inplace=True)
         
         # 聚合相同 (stkcd, year) 的姓名到列表中
-        # 确保姓名是唯一的（按客户要求）
+        # 确保姓名是唯一的
         grouped = df.groupby(['stkcd', 'year'])['name'].apply(lambda x: list(pd.unique(x))).reset_index()
         
         # 设置索引以便快速查询
