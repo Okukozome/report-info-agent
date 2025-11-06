@@ -160,9 +160,9 @@ def process_task(task_id: str, pdf_path: Path) -> Literal["success", "failed", "
         total_target_count = len(combined_target_list)
         
         if total_target_count == 0:
-            task_logger.warning("所有类别的标准名单均为空。任务将标记为成功，但结果为空。")
-            status = "success"
-            raise StopIteration("标准名单为空，无需处理。") # 使用 StopIteration 提前跳出
+            task_logger.warning("所有类别的标准名单均为空。")
+            status = "failed"
+            raise StopIteration("标准名单为空，无需处理。")
         else:
             task_logger.info(f"标准名单加载完毕 (共 {total_target_count} 人)。")
 
@@ -300,7 +300,6 @@ def process_task(task_id: str, pdf_path: Path) -> Literal["success", "failed", "
     
     except StopIteration as e: # 用于处理 "标准名单为空" 的情况
         task_logger.info(f"任务提前终止: {e}")
-        # 状态已在抛出前设置为 "success"
 
     except Exception as e:
         status = "failed"
