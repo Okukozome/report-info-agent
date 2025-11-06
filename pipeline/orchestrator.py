@@ -136,6 +136,8 @@ def process_task(task_id: str, pdf_path: Path) -> Literal["success", "failed", "
 
     status: Literal["success", "failed", "review"] = "failed"
     debug_files: Dict[str, str] = {}
+    # 暂存 CSV 结果，等待最终 status 确定
+    csv_data_to_save: Dict[str, List[schemas.Person]] = {}
     
     try:
         task_logger.info(f"=== 开始处理任务: {task_id} ===")
@@ -279,10 +281,9 @@ def process_task(task_id: str, pdf_path: Path) -> Literal["success", "failed", "
                 new_doubts = [f"[Verifier Doubt] {d}" for d in verification_doubts if f"[Verifier Doubt] {d}" not in result.assessment.doubts and d not in result.assessment.doubts]
                 result.assessment.doubts.extend(new_doubts)
 
-            # 保存最终结果 (只保存被找到且排名的人)
-            # 只保存 rank >= 0 的人到 CSV
+            # 暂存 CSV 结果 (只保存 rank >= 0 的人)
             ranked_persons_only = [p for p in result.persons if p.rank >= 0]
-            save_results_csv(task_id, category, ranked_persons_only)
+            csv_data_to_save[category] = ranked_persons_only
             
             # 保存 debug JSON (保存完整结果，包括 rank: -1)
             debug_files[f'4_{category.lower()}_extraction.json'] = result.model_dump_json(indent=2, ensure_ascii=False)
@@ -306,13 +307,37 @@ def process_task(task_id: str, pdf_path: Path) -> Literal["success", "failed", "
         task_logger.error(f"任务 {task_id} 遭遇致命错误: {e}", exc_info=True)
         
     finally:
-        # 步骤 6: 保存日志文件
+        # 步骤 6: 保存日志和结果文件
         task_logger.info(f"=== 任务 {task_id} 结束，最终状态: {status} ===")
         log_content = log_stream.getvalue()
-        debug_files[f'5_{task_id}.log'] = log_content
         
+        # --- 保存 Debug 文件 ---
+        debug_files[f'5_{task_id}.log'] = log_content
         save_debug_files(task_id, status, debug_files)
         
+        # --- 保存 Results 文件 (CSVs + Log) ---
+        try:
+            # 1. 保存 CSVs
+            if not csv_data_to_save and status != 'failed':
+                # 处理 'StopIteration' (空名单) 导致的 "success" 状态
+                # 仍然输出带表头的空 CSV 文件
+                task_logger.info("标准名单为空，正在保存空的CSV结果文件...")
+                for category in ["Directors", "Supervisors", "SeniorManagement"]:
+                    save_results_csv(task_id, status, category, [])
+            else:
+                # 正常保存暂存的 CSV 数据
+                for category, persons_list in csv_data_to_save.items():
+                    save_results_csv(task_id, status, category, persons_list)
+
+            # 2. 保存 Log 到 Results 目录
+            results_log_path = Path(settings.BASE_DIR) / "results" / status / task_id / f"{task_id}.log"
+            # 确保目录存在 (save_results_csv 应该已经创建了它)
+            results_log_path.parent.mkdir(parents=True, exist_ok=True)
+            results_log_path.write_text(log_content, encoding='utf-8')
+            
+        except Exception as e:
+            task_logger.error(f"!!! 无法保存最终的 Result 文件 (CSVs/Log): {e}")
+
         # 清理日志句柄
         log_stream.close()
         task_logger.removeHandler(stream_handler)

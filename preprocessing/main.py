@@ -77,6 +77,12 @@ def main():
         
         task_id = pdf_path.name
         
+        # 检查文件是否已处理
+        if output_path.exists():
+            logger.info(f"[{task_id}] -> SKIPPED (已存在 {output_name})")
+            summary["SKIPPED"] += 1
+            continue  # 跳过此文件
+
         try:
             # 传入 DEBUG_DIR
             status = process_file(pdf_path, output_path, settings, DEBUG_DIR) 
@@ -96,7 +102,7 @@ def main():
     # 6. 打印总结
     logger.info("--- 预处理流水线执行完毕 ---")
     logger.info(f"成功: {summary['SUCCESS']}")
-    logger.info(f"跳过: {summary['SKIPPED']} (例如页数过短)")
+    logger.info(f"跳过: {summary['SKIPPED']} (例如页数过短或已存在)")
     logger.info(f"失败: {summary['FAILED']}")
     logger.info("---")
 

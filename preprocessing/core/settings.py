@@ -9,7 +9,7 @@ class Settings(pydantic_settings.BaseSettings):
     # LLM API
     API_KEY: str = Field(..., description="LLM API 密钥")
     API_BASE_URL: str = Field(..., description="LLM API 的 Base URL")
-    LLM_MODEL: str = Field("moonshot-v1-32k", description="用于分析的 LLM 模型")
+    LLM_MODEL: str = Field(..., description="用于分析的 LLM 模型")
 
     # PP-StructureV3 API
     PP_API_URL: str = Field(..., description="PP-StructureV3 API 端点")

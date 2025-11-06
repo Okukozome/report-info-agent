@@ -34,6 +34,7 @@ def save_debug_files(
 
 def save_results_csv(
     task_id: str, 
+    status: Literal["success", "failed", "review"],
     category: Literal["Directors", "Supervisors", "SeniorManagement"], 
     persons: List[Person]
 ):
@@ -41,7 +42,8 @@ def save_results_csv(
     将最终的排序结果保存为 CSV
     """
     try:
-        results_dir = RESULTS_DIR / task_id
+        # 按 status / task_id 组织路径
+        results_dir = RESULTS_DIR / status / task_id
         results_dir.mkdir(parents=True, exist_ok=True)
         
         output_path = results_dir / f"{category.lower()}_ranked.csv"

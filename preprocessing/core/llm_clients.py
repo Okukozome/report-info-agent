@@ -26,7 +26,7 @@ def call_pp_structure_api(
     file_data_b64 = base64.b64encode(pdf_bytes).decode("ascii")
 
     headers = {
-        "Authorization": f"token {settings.PP_TOKEN}",
+        # "Authorization": f"token {settings.PP_TOKEN}",
         "Content-Type": "application/json"
     }
 
