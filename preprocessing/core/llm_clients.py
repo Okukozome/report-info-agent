@@ -35,14 +35,14 @@ def call_pp_structure_api(
         "file": file_data_b64, 
         "fileType": 0, # 0 = PDF
         
-        # --- 推荐的参数组合 ---
+        # 推荐的参数组合
         "visualize": False,
         "useTableRecognition": True,
         "useChartRecognition": True,
         "useWiredTableCellsTransToHtml": True,
         "useWirelessTableCellsTransToHtml": True,
         "useRegionDetection": True,
-        "textDetThresh": 0.1
+        "textDetThresh": 0.1,
         "useOcrResultsWithTableCells": True, # 确保表格识别同时包含 OCR 结果
         "useDocOrientationClassify": False, # 关闭旋转矫正
         "useDocUnwarping": False, # 关闭文本扭曲矫正
@@ -176,7 +176,7 @@ def find_dgs_chapter_in_toc(
 3. '人力资源情况'
 
 如果未找到确信的章节，返回 -1, -1, ''。
-**调用 `save_toc_analysis` 工具返回结果。**
+调用 `save_toc_analysis` 工具返回结果。
 """
     )
     user_prompt = f"请分析以下目录内容，提取DGS章节信息：\n\n--- 目录开始 ---\n{toc_markdown}\n--- 目录结束 ---"
@@ -193,7 +193,8 @@ def find_dgs_chapter_in_toc(
 def verify_chapter_start_page(
     page_markdown: str, 
     target_title: str, 
-    settings: Settings
+    settings: Settings,
+    verification_history: List[str]
 ) -> PageVerificationResult:
     """
     AI 步骤 2: 验证章节首页
@@ -201,7 +202,7 @@ def verify_chapter_start_page(
     system_prompt = (
 """
 你是一个章节验证助手。
-请判断【页面内容】是否是【目标章节标题】的【第一页】。
+请判断【页面内容】是否是【目标章节标题】的【起始页】。
 
 调用 `save_page_verification` 工具返回你的判断，状态必须是以下之一：
 - 'match': 页面以此标题为开头，是该章节的第一页。
@@ -211,8 +212,18 @@ def verify_chapter_start_page(
 """
     )
     
+    history_prompt_section = ""
+    if verification_history:
+        history_prompt_section = (
+            "--- 历史尝试开始 ---\n"
+            "你之前的尝试和判断如下：\n" +
+            "\n".join(verification_history) +
+            "\n--- 历史尝试结束 ---\n\n"
+        )
+
     user_prompt = (
         f"【目标章节标题】: \"{target_title}\"\n\n"
+        f"{history_prompt_section}"
         f"--- 页面内容开始 ---\n{page_markdown}\n--- 页面内容结束 ---"
     )
 

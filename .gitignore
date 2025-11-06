@@ -5,9 +5,14 @@
 *.pdf
 *.xlsx
 *.csv
+*.md
+*.json
+*.log
 
 # --- 保留项 ---
 !preprocessing/raw/filelist.txt
+!docs/*
+
 
 # --- 通用排除项 ---
 .env

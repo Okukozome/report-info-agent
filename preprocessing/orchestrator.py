@@ -2,7 +2,7 @@ import logging
 import re
 import shutil
 from pathlib import Path
-from typing import Literal
+from typing import Literal, List
 
 # 假设在 main.py 同级，core 是兄弟目录
 from core.settings import Settings
@@ -16,13 +16,13 @@ logger = logging.getLogger("Orchestrator")
 TOC_REGEX = re.compile(r"目\s*录")
 
 # 步骤 6.1：定义最大重试次数
-VERIFICATION_MAX_RETRIES = 5
+VERIFICATION_MAX_RETRIES = 10
 
 def process_file(
     pdf_path: Path, 
     output_path: Path, 
     settings: Settings,
-    debug_dir: Path  # 接收 debug_dir
+    debug_dir: Path
 ) -> str:
     """
     对单个 PDF 文件执行完整的预处理流水线
@@ -120,6 +120,9 @@ def process_file(
     found_pdf_index = -1
     
     visited_indexes = set()
+    
+    # 初始化历史列表
+    verification_history: List[str] = []
 
     for i in range(VERIFICATION_MAX_RETRIES):
         logger.info(f"[{pdf_path.name}]  验证循环 {i+1}/{VERIFICATION_MAX_RETRIES}: "
@@ -150,10 +153,18 @@ def process_file(
         # 2. AI 验证
         try:
             verify_result = llm_clients.verify_chapter_start_page(
-                page_markdown, target_title, settings
+                page_markdown, target_title, settings, verification_history
             )
             logger.info(f"[{pdf_path.name}]  AI 验证结果: {verify_result.status} ({verify_result.reason})")
             
+            # 记录本次历史以备下次使用
+            history_entry = (
+                f"Attempt {i+1}: Tested physical index {current_pdf_index} (Page {current_pdf_index + 1}). "
+                f"AI result was '{verify_result.status}'. "
+                f"AI reason: \"{verify_result.reason}\""
+            )
+            verification_history.append(history_entry)
+
             # 3. 决策
             if verify_result.status == "match":
                 found_pdf_index = current_pdf_index

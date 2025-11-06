@@ -27,8 +27,8 @@ class Settings(BaseSettings):
     PP_TOKEN: str = Field(..., env="PP_TOKEN")
     
     # LLM 模型配置
-    LLM_MODEL: str = Field(default="gpt-5-mini", env="LLM_MODEL")
-    LLM_TIMEOUT: int = Field(default=120, env="LLM_TIMEOUT")
+    LLM_MODEL: str = Field(default="gpt-4o", env="LLM_MODEL")
+    LLM_TIMEOUT: int = Field(default=180, env="LLM_TIMEOUT")
     PP_TIMEOUT: int = Field(default=180, env="PP_TIMEOUT")
 
 # 导出一个单例，供其他模块使用
